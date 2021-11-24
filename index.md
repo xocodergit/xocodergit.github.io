@@ -35,3 +35,30 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 ### Support or Contact
 
 Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+
+```go
+func StructPatch(dest interface{}, patch interface{}) error {
+	destObjMeta := reflect.ValueOf(dest)
+	if !strings.HasPrefix(destObjMeta.Type().String(), "*") {
+		return errors.New("invalid type of dest, it must be a pointer")
+	}
+
+	patchObjMeta := reflect.ValueOf(patch)
+	if strings.HasPrefix(patchObjMeta.Type().String(), "*") {
+		return errors.New("invalid type of patch, it must not be a pointer")
+	}
+
+	for i := 0; i < patchObjMeta.NumField(); i++ {
+		vtype := patchObjMeta.Field(i).Type()
+		if !strings.HasPrefix(vtype.String(), "*") {
+			// skip the none pointer field
+			continue
+		}
+		if patchObjMeta.Field(i).IsNil() {
+			continue
+		}
+		destObjMeta.Elem().Field(i).Set(patchObjMeta.Field(i))
+	}
+	return nil
+}
+```
